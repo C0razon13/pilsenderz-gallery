@@ -42,7 +42,7 @@
         <input type="text" id="namaKlien" placeholder="Contoh: Rizky & Nisa" oninput="generateLink()">
 
         <label>2. Base URL Galeri Web</label>
-        <input type="text" id="baseUrl" value="https://erazphoto.vercel.app/index.html" oninput="generateLink()">
+    <input type="text" id="baseUrl" value="https://erazphoto.vercel.app/index.html" oninput="generateLink()">
 
         <label>3. Pilih Foto Kamera (Auto-Detect Nama File)</label>
         <div class="mode-box">
@@ -116,48 +116,53 @@
             document.getElementById("resultWa").value = pesanWa;
         }
 
-        async function shortenLink() {
+       function shortenLink() {
     const btn = document.getElementById("btn-shorten");
     btn.innerText = "⏳ Memproses Link Pendek...";
     btn.disabled = true;
 
-    const encodedTarget = encodeURIComponent(currentLongUrl);
+    // Menggunakan teknik JSONP untuk menembus aturan CORS secara penuh
+    const cbName = "jsonp_short_" + Date.now();
     
-    // Daftar 3 jalur proxy CORS paling stabil
-    const proxyEndpoints = [
-        `https://corsproxy.io/?https://tinyurl.com/api-create.php?url=${encodedTarget}`,
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://tinyurl.com/api-create.php?url=${encodedTarget}`)}`,
-        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(`https://tinyurl.com/api-create.php?url=${encodedTarget}`)}`
-    ];
-
-    let shortUrl = "";
-
-    // Mencoba satu per satu jalur proxy secara otomatis
-    for (const endpoint of proxyEndpoints) {
-        try {
-            const response = await fetch(endpoint);
-            if (response.ok) {
-                const text = (await response.text()).trim();
-                if (text && text.startsWith("http")) {
-                    shortUrl = text;
-                    break; // Berhasil! Keluar dari loop
-                }
-            }
-        } catch (e) {
-            console.warn("Proxy gagal, mencoba jalur berikutnya...", e);
-        }
-    }
-
-    if (shortUrl) {
-        document.getElementById("resultUrl").innerText = shortUrl;
-        const nama = document.getElementById("namaKlien").value.trim() || "Budi & Ani";
-        updateWaText(shortUrl, nama);
-        btn.innerText = "✅ Link Pendek Berhasil Dibuat!";
-    } else {
-        alert("Gagal mempersingkat link secara otomatis.\n\nJika menggunakan AdBlock / Brave Shield, nonaktifkan sementara untuk 127.0.0.1.");
-        btn.innerText = "🪄 Persingkat Link (TinyURL)";
+    const timeout = setTimeout(() => {
+        cleanup();
+        alert("Koneksi RTO saat memproses link pendek. Silakan coba klik tombol kembali.");
+        btn.innerText = "🪄 Persingkat Link";
         btn.disabled = false;
+    }, 8000);
+
+    function cleanup() {
+        clearTimeout(timeout);
+        delete window[cbName];
+        const oldScript = document.getElementById("jsonp-script");
+        if (oldScript) oldScript.remove();
     }
+
+    window[cbName] = function(data) {
+        cleanup();
+        if (data && data.shorturl) {
+            document.getElementById("resultUrl").innerText = data.shorturl;
+            const nama = document.getElementById("namaKlien").value.trim() || "Budi & Ani";
+            updateWaText(data.shorturl, nama);
+            btn.innerText = "✅ Link Pendek Berhasil Dibuat!";
+        } else {
+            alert("Gagal memproses link pendek.");
+            btn.innerText = "🪄 Persingkat Link";
+            btn.disabled = false;
+        }
+    };
+
+    const script = document.createElement("script");
+    script.id = "jsonp-script";
+    script.src = `https://is.gd/create.php?format=json&callback=${cbName}&url=${encodeURIComponent(currentLongUrl)}`;
+    script.onerror = function() {
+        cleanup();
+        alert("Gagal terhubung ke layanan pemendek link.");
+        btn.innerText = "🪄 Persingkat Link";
+        btn.disabled = false;
+    };
+
+    document.body.appendChild(script);
 }
 
         function copyToClipboard() {
