@@ -40,7 +40,11 @@
         <label>1. Nama Klien / Pasangan</label>
         <input type="text" id="namaKlien" placeholder="Contoh: Rizky & Nisa" oninput="generateLink()">
     </div>
-
+<!-- TAMBAHAN BARU: Kolom Nama Folder -->
+    <div class="form-group">
+        <label>1b. Nama Folder Foto di Vercel (Tanpa spasi)</label>
+        <input type="text" id="namaFolder" placeholder="Contoh: rizky-nisa" oninput="generateLink()">
+    </div>
     <div class="form-group">
         <label>2. Base URL Galeri Web</label>
         <input type="text" id="baseUrl" value="https://erazphoto.vercel.app/index.html" oninput="generateLink()">
@@ -96,13 +100,17 @@
 
     function generateLink() {
         const nama = document.getElementById("namaKlien").value.trim() || "Budi & Ani";
+        // Ambil nilai nama folder
+        const folder = document.getElementById("namaFolder").value.trim() || "default";
         const base = document.getElementById("baseUrl").value.trim() || "https://erazphoto.vercel.app/index.html";
         
         if (detectedPhotoNames.length === 0) {
-            currentLongUrl = `${base}?klien=${encodeURIComponent(nama)}&foto=DSCF7223.jpg,DSCF7224.jpg,DSCF7226.jpg`;
+            // Sisipkan parameter folder ke dalam URL
+            currentLongUrl = `${base}?folder=${encodeURIComponent(folder)}&klien=${encodeURIComponent(nama)}&foto=DSCF7223.jpg,DSCF7224.jpg,DSCF7226.jpg`;
         } else {
             const fotoStr = detectedPhotoNames.join(",");
-            currentLongUrl = `${base}?klien=${encodeURIComponent(nama)}&foto=${encodeURIComponent(fotoStr)}`;
+            // Sisipkan parameter folder ke dalam URL
+            currentLongUrl = `${base}?folder=${encodeURIComponent(folder)}&klien=${encodeURIComponent(nama)}&foto=${encodeURIComponent(fotoStr)}`;
         }
 
         document.getElementById("resultUrl").innerText = currentLongUrl;
