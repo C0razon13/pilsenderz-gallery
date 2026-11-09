@@ -65,7 +65,7 @@
     <div class="form-group">
         <label>🔗 Preview Link Galeri Web:</label>
         <div id="resultUrl" class="preview-box">Link akan muncul di sini setelah Anda memasukkan nama & memilih foto...</div>
-        <button id="btn-shorten" class="btn btn-purple" onclick="shortenLink()">🪄 Persingkat Link (TinyURL / is.gd)</button>
+        <button id="btn-shorten" class="btn btn-purple" onclick="shortenLink()">🪄 Persingkat Link (TinyURL)</button>
     </div>
 
     <div class="form-group">
@@ -109,7 +109,7 @@
         updateWaText(currentLongUrl, nama);
 
         const btn = document.getElementById("btn-shorten");
-        btn.innerText = "🪄 Persingkat Link (TinyURL / is.gd)";
+        btn.innerText = "🪄 Persingkat Link (TinyURL)";
         btn.disabled = false;
     }
 
@@ -118,7 +118,7 @@
         document.getElementById("waText").value = text;
     }
 
-    function shortenLink() {
+    async function shortenLink() {
         if (!currentLongUrl) {
             alert("Silakan isi nama klien dan pilih foto terlebih dahulu.");
             return;
@@ -128,47 +128,28 @@
         btn.innerText = "⏳ Memproses Link Pendek...";
         btn.disabled = true;
 
-        const cbName = "jsonp_short_" + Date.now();
-        
-        const timeout = setTimeout(() => {
-            cleanup();
-            alert("Waktu permintaan habis. Silakan coba klik tombol persingkat link kembali.");
-            btn.innerText = "🪄 Persingkat Link";
-            btn.disabled = false;
-        }, 8000);
-
-        function cleanup() {
-            clearTimeout(timeout);
-            delete window[cbName];
-            const oldScript = document.getElementById("jsonp-script");
-            if (oldScript) oldScript.remove();
-        }
-
-        window[cbName] = function(data) {
-            cleanup();
-            if (data && data.shorturl) {
-                document.getElementById("resultUrl").innerText = data.shorturl;
-                const nama = document.getElementById("namaKlien").value.trim() || "Budi & Ani";
-                updateWaText(data.shorturl, nama);
-                btn.innerText = "✅ Link Pendek Berhasil Dibuat!";
-            } else {
-                alert("Gagal memproses link pendek.");
-                btn.innerText = "🪄 Persingkat Link";
-                btn.disabled = false;
+        try {
+            // Memanggil API proxy internal Vercel (100% Bebas CORS & AdBlock)
+            const proxyEndpoint = `https://erazphoto.vercel.app/api/shorten?url=${encodeURIComponent(currentLongUrl)}`;
+            const response = await fetch(proxyEndpoint);
+            
+            if (response.ok) {
+                const shortUrl = (await response.text()).trim();
+                if (shortUrl && shortUrl.startsWith("http")) {
+                    document.getElementById("resultUrl").innerText = shortUrl;
+                    const nama = document.getElementById("namaKlien").value.trim() || "Budi & Ani";
+                    updateWaText(shortUrl, nama);
+                    btn.innerText = "✅ Link Pendek Berhasil Dibuat!";
+                    return;
+                }
             }
-        };
-
-        const script = document.createElement("script");
-        script.id = "jsonp-script";
-        script.src = `https://is.gd/create.php?format=json&callback=${cbName}&url=${encodeURIComponent(currentLongUrl)}`;
-        script.onerror = function() {
-            cleanup();
-            alert("Gagal terhubung ke server pemendek link.");
-            btn.innerText = "🪄 Persingkat Link";
+            throw new Error("Gagal mengambil dari Vercel Proxy");
+        } catch (err) {
+            console.error(err);
+            alert("Gagal memproses link pendek. Pastikan file vercel.json sudah diunggah di GitHub.");
+            btn.innerText = "🪄 Persingkat Link (TinyURL)";
             btn.disabled = false;
-        };
-
-        document.body.appendChild(script);
+        }
     }
 
     function copyLink() {
