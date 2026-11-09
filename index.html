@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Pemilihan Foto - erazphoto</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #ffffff; text-align: center; margin: 0; padding: 20px; }
+        h2 { color: #f1f1f1; margin-bottom: 5px; }
+        p { color: #aaaaaa; margin-bottom: 15px; font-size: 14px; }
+        
+        #debug-log { background: #222; border: 1px solid #444; color: #ffca28; padding: 10px; margin: 15px auto; max-width: 800px; border-radius: 6px; font-family: monospace; font-size: 13px; text-align: left; }
+
+        .galeri { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; padding: 10px; max-width: 1200px; margin: auto; }
+        
+        .foto-kartu { position: relative; cursor: pointer; border: 4px solid transparent; border-radius: 8px; overflow: hidden; transition: 0.2s; background-color: #2a2a2a; min-width: 200px; min-height: 250px; }
+        .foto-kartu img { height: 250px; width: 100%; object-fit: cover; transition: transform 0.3s ease; display: block; }
+        .foto-kartu:hover img { transform: scale(1.05); }
+        
+        .terpilih { border-color: #4CAF50; }
+        .ceklis { display: none; position: absolute; top: 10px; right: 10px; background: #4CAF50; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 2; }
+        .terpilih .ceklis { display: block; }
+
+        /* Tombol Zoom */
+        .btn-zoom { position: absolute; bottom: 10px; right: 10px; background: rgba(0, 0, 0, 0.75); color: #fff; border: 1px solid rgba(255,255,255,0.5); padding: 5px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; z-index: 5; transition: 0.2s; font-weight: bold; }
+        .btn-zoom:hover { background: #2196F3; border-color: #2196F3; color: white; }
+
+        .tombol-kirim { position: fixed; bottom: 30px; right: 30px; padding: 15px 25px; background: #4CAF50; color: white; border: none; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: 0.3s; z-index: 10; }
+        .tombol-kirim:hover { background: #45a049; transform: translateY(-3px); }
+        .tombol-kirim:disabled { background: #666666; cursor: not-allowed; }
+        .error-img { padding: 40px 10px; color: #ff6b6b; font-size: 12px; }
+
+        /* Pop-up Modal Zoom Fullscreen */
+        .modal-zoom { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.92); justify-content: center; align-items: center; }
+        .modal-zoom img { max-width: 90%; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 25px rgba(0,0,0,0.8); object-fit: contain; }
+        .close-zoom { position: absolute; top: 20px; right: 30px; color: #ffffff; font-size: 45px; font-weight: bold; cursor: pointer; z-index: 1000; user-select: none; }
+        .close-zoom:hover { color: #ff5252; }
+    </style>
+</head>
+<body>
+
+    <h2 id="judul-galeri">Galeri Foto Klien</h2>
+    <p>Klik foto untuk memilih. Klik tombol 🔍 <b>Zoom</b> untuk melihat foto lebih detail.</p>
+
+    <div id="debug-log">🔍 <b>Status Log:</b><br></div>
+
+    <div class="galeri" id="tempat-galeri"></div>
+
+    <button class="tombol-kirim" id="btn-kirim" onclick="kirimKeCloud()">🚀 Kirim Pilihan (<span id="jumlah">0</span>)</button>
+
+    <!-- Modal Pop-up Zoom -->
+    <div id="modalZoom" class="modal-zoom" onclick="tutupZoom()">
+        <span class="close-zoom" onclick="tutupZoom()">&times;</span>
+        <img id="imgZoomed" src="" alt="Zoom Foto" onclick="event.stopPropagation()">
+    </div>
+
+    <script>
+        const debugBox = document.getElementById("debug-log");
+        function log(msg) { debugBox.innerHTML += `> ${msg}<br>`; }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const NAMA_KLIEN = urlParams.get('klien') || "Budi & Ani";
+        const fotoParam = urlParams.get('foto');
+        const daftarFoto = fotoParam ? fotoParam.split(',') : ["1.jpg", "2.jpg", "3.jpg"];
+
+        document.getElementById("judul-galeri").innerText = `Galeri Foto - ${NAMA_KLIEN}`;
+
+        const fotoTerpilih = new Set();
+        const tempatGaleri = document.getElementById("tempat-galeri");
+        const teksJumlah = document.getElementById("jumlah");
+
+        const SUPABASE_REST_URL = "https://qsyerpsbupzjffvmbxlw.supabase.co/rest/v1/pilihan_klien";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzeWVycHNidXB6amZmdm1ieGx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxNjE3NTcsImV4cCI6MjEwOTczNzc1N30.OsxDy-O6t5Nl-g0n_PjebG4mRrlQ78EEkoqoKJ4taKI";
+
+        let existingRowId = null;
+
+        async function muatPilihanSebelumnya() {
+            log(`Memeriksa riwayat pilihan untuk <b>${NAMA_KLIEN}</b>...`);
+            renderFotoLokal();
+
+            try {
+                const queryUrl = `${SUPABASE_REST_URL}?nama_klien=eq.${encodeURIComponent(NAMA_KLIEN)}&select=*`;
+                const response = await fetch(queryUrl, {
+                    method: 'GET',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        const record = data[data.length - 1];
+                        existingRowId = record.id;
+                        
+                        fotoTerpilih.clear();
+                        if (Array.isArray(record.foto_terpilih)) {
+                            record.foto_terpilih.forEach(foto => fotoTerpilih.add(foto));
+                        }
+                        
+                        teksJumlah.innerText = fotoTerpilih.size;
+                        document.getElementById("btn-kirim").innerText = `🚀 Perbarui Pilihan (${fotoTerpilih.size})`;
+                        log(`✅ Berhasil memuat riwayat! ${fotoTerpilih.size} foto otomatis tercentang.`);
+                        renderFotoLokal();
+                    } else {
+                        log(`ℹ️ Belum ada riwayat pilihan untuk ${NAMA_KLIEN}.`);
+                    }
+                }
+            } catch (err) {
+                log(`❌ Error Jaringan Auto-Load: ${err.message}`);
+            }
+        }
+
+        function renderFotoLokal() {
+            tempatGaleri.innerHTML = "";
+            
+            daftarFoto.forEach(namaFile => {
+                const namaTrimmed = namaFile.trim();
+                const kartu = document.createElement("div");
+                kartu.className = "foto-kartu";
+                
+                if (fotoTerpilih.has(namaTrimmed)) {
+                    kartu.classList.add("terpilih");
+                }
+                
+                kartu.onclick = (e) => {
+                    if (e.target.classList.contains('btn-zoom')) return;
+
+                    if (fotoTerpilih.has(namaTrimmed)) {
+                        fotoTerpilih.delete(namaTrimmed);
+                        kartu.classList.remove("terpilih");
+                    } else {
+                        fotoTerpilih.add(namaTrimmed);
+                        kartu.classList.add("terpilih");
+                    }
+                    
+                    teksJumlah.innerText = fotoTerpilih.size;
+                    document.getElementById("btn-kirim").innerText = existingRowId 
+                        ? `🚀 Perbarui Pilihan (${fotoTerpilih.size})` 
+                        : `🚀 Kirim Pilihan (${fotoTerpilih.size})`;
+                };
+
+                const img = document.createElement("img");
+                img.src = namaTrimmed;
+                img.alt = namaTrimmed;
+                img.onerror = () => { kartu.innerHTML = `<div class="error-img">❌ Gagal memuat <b>${namaTrimmed}</b></div>`; };
+
+                const btnZoom = document.createElement("button");
+                btnZoom.className = "btn-zoom";
+                btnZoom.type = "button";
+                btnZoom.innerText = "🔍 Zoom";
+                btnZoom.onclick = (e) => {
+                    e.stopPropagation();
+                    bukaZoom(namaTrimmed);
+                };
+
+                const ceklisDiv = document.createElement("div");
+                ceklisDiv.className = "ceklis";
+                ceklisDiv.innerText = "✓ Terpilih";
+
+                kartu.appendChild(img);
+                kartu.appendChild(btnZoom);
+                kartu.appendChild(ceklisDiv);
+                tempatGaleri.appendChild(kartu);
+            });
+        }
+
+        function bukaZoom(src) {
+            document.getElementById("imgZoomed").src = src;
+            document.getElementById("modalZoom").style.display = "flex";
+        }
+
+        function tutupZoom() {
+            document.getElementById("modalZoom").style.display = "none";
+        }
+
+        muatPilihanSebelumnya();
+
+        async function kirimKeCloud() {
+            if (fotoTerpilih.size === 0) {
+                alert("Pilih minimal 1 foto terlebih dahulu!");
+                return;
+            }
+
+            const btnKirim = document.getElementById("btn-kirim");
+            btnKirim.disabled = true;
+            btnKirim.innerText = "Mengirim...";
+            log(`Mengirim pilihan ${NAMA_KLIEN} ke Cloud...`);
+
+            const payload = { 
+                nama_klien: NAMA_KLIEN, 
+                foto_terpilih: Array.from(fotoTerpilih),
+                status: 'Selesai'
+            };
+
+            let targetUrl = SUPABASE_REST_URL;
+            let targetMethod = 'POST';
+
+            if (existingRowId) {
+                targetUrl = `${SUPABASE_REST_URL}?id=eq.${existingRowId}`;
+                targetMethod = 'PATCH';
+            }
+
+            try {
+                const response = await fetch(targetUrl, {
+                    method: targetMethod,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    log(`✅ SUKSES: Pilihan ${NAMA_KLIEN} berhasil disimpan di Cloud!`);
+                    alert(`✅ TERKIRIM KE ERAZPHOTO!\n\nData ${fotoTerpilih.size} foto pilihan ${NAMA_KLIEN} berhasil disimpan.`);
+                    btnKirim.disabled = false;
+                    btnKirim.innerText = `✓ Perbarui Pilihan (${fotoTerpilih.size})`;
+                } else {
+                    const errText = await response.text();
+                    log(`❌ Gagal Mengirim (${response.status}): ${errText}`);
+                    btnKirim.disabled = false;
+                    btnKirim.innerText = `🚀 Kirim Pilihan (${fotoTerpilih.size})`;
+                }
+            } catch (err) {
+                log(`❌ Error Jaringan: ${err.message}`);
+                btnKirim.disabled = false;
+                btnKirim.innerText = `🚀 Kirim Pilihan (${fotoTerpilih.size})`;
+            }
+        }
+    </script>
+</body>
+</html>
