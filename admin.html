@@ -3,188 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pilsenderz - Admin Link Generator</title>
+    <title>Pilsenderz Link Generator - erazphoto</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #ffffff; text-align: center; margin: 0; padding: 30px 20px; }
-        .card { background-color: #1e1e1e; border: 1px solid #333; max-width: 650px; margin: auto; padding: 25px; border-radius: 12px; text-align: left; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h2 { color: #4CAF50; margin-top: 0; text-align: center; }
-        label { display: block; font-weight: bold; margin-top: 15px; margin-bottom: 5px; font-size: 14px; color: #ddd; }
-        input, textarea { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background-color: #2a2a2a; color: #fff; box-sizing: border-box; font-family: inherit; font-size: 14px; }
-        input:focus, textarea:focus { border-color: #4CAF50; outline: none; }
-        
-        /* Membatasi tinggi kotak link agar tidak menjuntai ke bawah saat link sangat panjang */
-        .output-box { background: #181818; border: 1px dashed #4CAF50; padding: 12px; border-radius: 6px; margin-top: 15px; word-break: break-all; font-family: monospace; font-size: 13px; color: #81c784; max-height: 80px; overflow-y: auto; }
-        
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        button { flex: 1; min-width: 150px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        
-        .btn-shorten { background-color: #9C27B0; color: white; width: 100%; margin-top: 10px; }
-        .btn-shorten:hover { background-color: #7B1FA2; }
-        .btn-shorten:disabled { background-color: #555555; cursor: not-allowed; }
-        
-        .btn-copy { background-color: #2196F3; color: white; }
-        .btn-copy:hover { background-color: #1e88e5; }
-        .btn-wa { background-color: #25D366; color: white; }
-        .btn-wa:hover { background-color: #1da851; }
-
-        .mode-box { background: #252525; padding: 15px; border-radius: 6px; margin-top: 10px; border: 1px solid #3d3d3d; }
-        .file-input { border: 2px dashed #4CAF50; padding: 15px; text-align: center; cursor: pointer; background: #1a1a1a; width: 100%; box-sizing: border-box; }
-        .file-input:hover { background: #222; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #121212; color: #e0e0e0; display: flex; justify-content: center; padding: 30px 15px; min-height: 100vh; }
+        .container { background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px; padding: 25px; width: 100%; max-width: 650px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        h1 { font-size: 22px; color: #4caf50; text-align: center; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #888; font-size: 13px; margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #ddd; }
+        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background-color: #2a2a2a; color: #fff; font-size: 14px; outline: none; }
+        input[type="text"]:focus { border-color: #4caf50; }
+        .file-upload-box { border: 2px dashed #4caf50; border-radius: 8px; padding: 20px; text-align: center; background-color: #252a25; cursor: pointer; }
+        .file-upload-box input { display: none; }
+        .file-upload-btn { background-color: #2e7d32; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; display: inline-block; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
+        .info-text { font-size: 12px; color: #aaa; margin-top: 5px; }
+        .success-badge { color: #81c784; font-size: 13px; font-weight: 600; margin-top: 8px; display: none; }
+        .preview-box { background-color: #182518; border: 1px dashed #4caf50; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; word-break: break-all; color: #a5d6a7; margin-bottom: 12px; max-height: 120px; overflow-y: auto; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+        .btn-purple { background-color: #8e24aa; color: white; }
+        .btn-purple:hover { background-color: #7b1fa2; }
+        .btn-purple:disabled { background-color: #555; cursor: not-allowed; }
+        .btn-blue { background-color: #0288d1; color: white; }
+        .btn-green { background-color: #2e7d32; color: white; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        textarea { width: 100%; height: 160px; padding: 12px; border-radius: 8px; border: 1px solid #333; background-color: #2a2a2a; color: #fff; font-size: 13px; resize: vertical; outline: none; line-height: 1.5; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>⚡ Pilsenderz Link Generator</h2>
-        <p style="font-size: 13px; color: #aaa; text-align: center; margin-bottom: 20px;">Pembuat Link Galeri Klien & Draf Pesan WhatsApp Auto-Format</p>
+<div class="container">
+    <h1>⚡ Pilsenderz Link Generator</h1>
+    <p class="subtitle">Pembuat Link Galeri Klien & Draf Pesan WhatsApp Auto-Format (*erazphoto*)</p>
 
+    <div class="form-group">
         <label>1. Nama Klien / Pasangan</label>
         <input type="text" id="namaKlien" placeholder="Contoh: Rizky & Nisa" oninput="generateLink()">
+    </div>
 
+    <div class="form-group">
         <label>2. Base URL Galeri Web</label>
-    <input type="text" id="baseUrl" value="https://erazphoto.vercel.app/index.html" oninput="generateLink()">
+        <input type="text" id="baseUrl" value="https://erazphoto.vercel.app/index.html" oninput="generateLink()">
+    </div>
 
+    <div class="form-group">
         <label>3. Pilih Foto Kamera (Auto-Detect Nama File)</label>
-        <div class="mode-box">
-            <input type="file" id="filePicker" multiple accept="image/*" class="file-input" onchange="bacaFileKamera()">
-            <small style="color: #aaa; display: block; margin-top: 8px;">💡 Pilih / Blok seluruh foto JPG dari kamera Anda. Nama file asli akan dibaca otomatis!</small>
-            <div id="fileInfo" style="color: #81c784; font-size: 13px; font-weight: bold; margin-top: 10px;"></div>
-        </div>
-
-        <label>4. Nomor WA Klien (Opsional)</label>
-        <input type="text" id="noHp" placeholder="628123456789" oninput="generateLink()">
-
-        <label>🔗 Preview Link Galeri Web:</label>
-        <div class="output-box" id="resultUrl">-</div>
-        
-        <!-- Tombol Baru untuk Mengecilkan Link -->
-        <button class="btn-shorten" id="btn-shorten" onclick="shortenLink()">🪄 Persingkat Link (TinyURL)</button>
-
-        <label>💬 Preview Pesan WhatsApp:</label>
-        <textarea id="resultWa" rows="7" readonly></textarea>
-
-        <div class="btn-group">
-            <button class="btn-copy" onclick="copyToClipboard()">📋 Salin Link</button>
-            <button class="btn-wa" onclick="kirimWa()">📱 Kirim via WhatsApp</button>
+        <div class="file-upload-box" onclick="document.getElementById('fileInput').click()">
+            <span class="file-upload-btn">Choose Files</span>
+            <span id="fileCount" style="font-size: 13px; color: #ccc;">Belum ada foto dipilih</span>
+            <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)">
+            <div class="info-text">💡 Pilih / Blok seluruh foto JPG dari kamera Anda. Nama file asli akan dibaca otomatis!</div>
+            <div id="fileSuccess" class="success-badge">✅ Berhasil membaca <span id="photoNum">0</span> nama file foto.</div>
         </div>
     </div>
 
-    <script>
-        let autoFotoList = [];
-        let currentLongUrl = ""; // Menyimpan URL panjang di memori
+    <div class="form-group">
+        <label>4. Nomor WA Klien (Opsional)</label>
+        <input type="text" id="noWa" placeholder="628123456789" oninput="generateLink()">
+    </div>
 
-        function bacaFileKamera() {
-            const input = document.getElementById("filePicker");
-            const info = document.getElementById("fileInfo");
-            autoFotoList = [];
+    <div class="form-group">
+        <label>🔗 Preview Link Galeri Web:</label>
+        <div id="resultUrl" class="preview-box">Link akan muncul di sini setelah Anda memasukkan nama & memilih foto...</div>
+        <button id="btn-shorten" class="btn btn-purple" onclick="shortenLink()">🪄 Persingkat Link (TinyURL / is.gd)</button>
+    </div>
 
-            if (input.files.length > 0) {
-                for (let i = 0; i < input.files.length; i++) {
-                    autoFotoList.push(input.files[i].name);
-                }
-                info.innerText = `✅ Berhasil membaca ${autoFotoList.length} nama file foto.`;
-            } else {
-                info.innerText = "";
-            }
-            generateLink();
-        }
+    <div class="form-group">
+        <label>💬 Preview Pesan WhatsApp:</label>
+        <textarea id="waText" readonly></textarea>
+        <div class="btn-group">
+            <button class="btn btn-blue" onclick="copyLink()">📋 Salin Link</button>
+            <button class="btn btn-green" onclick="sendWa()">📱 Kirim via WhatsApp</button>
+        </div>
+    </div>
+</div>
 
-        function generateLink() {
-            const nama = document.getElementById("namaKlien").value.trim() || "Budi & Ani";
-            const baseUrl = document.getElementById("baseUrl").value.trim();
-            const noHp = document.getElementById("noHp").value.trim();
+<script>
+    let currentLongUrl = "";
+    let detectedPhotoNames = [];
 
-            let finalUrl = `${baseUrl}?klien=${encodeURIComponent(nama)}`;
-
-            if (autoFotoList.length > 0) {
-                finalUrl += `&foto=${autoFotoList.join(',')}`;
-            }
-
-            // Simpan url panjang di memori dan tampilkan di layar
-            currentLongUrl = finalUrl;
-            document.getElementById("resultUrl").innerText = currentLongUrl;
-            updateWaText(currentLongUrl, nama);
-
-            // Kembalikan tombol shorten ke status awal setiap ada perubahan input
-            const btnShorten = document.getElementById("btn-shorten");
-            btnShorten.innerText = "🪄 Persingkat Link (TinyURL)";
-            btnShorten.disabled = false;
-        }
-
-        function updateWaText(url, nama) {
-            const pesanWa = `Halo Kak ${nama},\n\nBerikut adalah link galeri untuk pemilihan foto karya *erazphoto*:\n👉 ${url}\n\nSilakan klik foto favorit Kakak untuk memberi centang, atau klik 🔍 Zoom untuk melihat detail. Jika sudah selesai, tekan tombol *Kirim Pilihan*.\n\nTerima kasih! 🙏🏼`;
-            document.getElementById("resultWa").value = pesanWa;
-        }
-
-       function shortenLink() {
-    const btn = document.getElementById("btn-shorten");
-    btn.innerText = "⏳ Memproses Link Pendek...";
-    btn.disabled = true;
-
-    // Menggunakan teknik JSONP untuk menembus aturan CORS secara penuh
-    const cbName = "jsonp_short_" + Date.now();
-    
-    const timeout = setTimeout(() => {
-        cleanup();
-        alert("Koneksi RTO saat memproses link pendek. Silakan coba klik tombol kembali.");
-        btn.innerText = "🪄 Persingkat Link";
-        btn.disabled = false;
-    }, 8000);
-
-    function cleanup() {
-        clearTimeout(timeout);
-        delete window[cbName];
-        const oldScript = document.getElementById("jsonp-script");
-        if (oldScript) oldScript.remove();
+    function handleFiles(files) {
+        if (!files || files.length === 0) return;
+        
+        detectedPhotoNames = Array.from(files).map(file => file.name);
+        
+        document.getElementById("fileCount").innerText = `${files.length} files`;
+        document.getElementById("photoNum").innerText = files.length;
+        document.getElementById("fileSuccess").style.display = "block";
+        
+        generateLink();
     }
 
-    window[cbName] = function(data) {
-        cleanup();
-        if (data && data.shorturl) {
-            document.getElementById("resultUrl").innerText = data.shorturl;
-            const nama = document.getElementById("namaKlien").value.trim() || "Budi & Ani";
-            updateWaText(data.shorturl, nama);
-            btn.innerText = "✅ Link Pendek Berhasil Dibuat!";
+    function generateLink() {
+        const nama = document.getElementById("namaKlien").value.trim() || "Budi & Ani";
+        const base = document.getElementById("baseUrl").value.trim() || "https://erazphoto.vercel.app/index.html";
+        
+        if (detectedPhotoNames.length === 0) {
+            currentLongUrl = `${base}?klien=${encodeURIComponent(nama)}&foto=DSCF7223.jpg,DSCF7224.jpg,DSCF7226.jpg`;
         } else {
-            alert("Gagal memproses link pendek.");
+            const fotoStr = detectedPhotoNames.join(",");
+            currentLongUrl = `${base}?klien=${encodeURIComponent(nama)}&foto=${encodeURIComponent(fotoStr)}`;
+        }
+
+        document.getElementById("resultUrl").innerText = currentLongUrl;
+        updateWaText(currentLongUrl, nama);
+
+        const btn = document.getElementById("btn-shorten");
+        btn.innerText = "🪄 Persingkat Link (TinyURL / is.gd)";
+        btn.disabled = false;
+    }
+
+    function updateWaText(url, nama) {
+        const text = `Halo Kak ${nama},\n\nBerikut adalah link galeri untuk pemilihan foto karya *erazphoto*:\n👉 ${url}\n\nSilakan buka link di atas, pilih foto-foto favorit Kakak, lalu tekan tombol *Perbarui Pilihan* di bagian bawah galeri jika sudah selesai.\n\nTerima kasih! 🙏`;
+        document.getElementById("waText").value = text;
+    }
+
+    function shortenLink() {
+        if (!currentLongUrl) {
+            alert("Silakan isi nama klien dan pilih foto terlebih dahulu.");
+            return;
+        }
+
+        const btn = document.getElementById("btn-shorten");
+        btn.innerText = "⏳ Memproses Link Pendek...";
+        btn.disabled = true;
+
+        const cbName = "jsonp_short_" + Date.now();
+        
+        const timeout = setTimeout(() => {
+            cleanup();
+            alert("Waktu permintaan habis. Silakan coba klik tombol persingkat link kembali.");
             btn.innerText = "🪄 Persingkat Link";
             btn.disabled = false;
-        }
-    };
+        }, 8000);
 
-    const script = document.createElement("script");
-    script.id = "jsonp-script";
-    script.src = `https://is.gd/create.php?format=json&callback=${cbName}&url=${encodeURIComponent(currentLongUrl)}`;
-    script.onerror = function() {
-        cleanup();
-        alert("Gagal terhubung ke layanan pemendek link.");
-        btn.innerText = "🪄 Persingkat Link";
-        btn.disabled = false;
-    };
-
-    document.body.appendChild(script);
-}
-
-        function copyToClipboard() {
-            const urlText = document.getElementById("resultUrl").innerText;
-            navigator.clipboard.writeText(urlText);
-            alert("✅ Link berhasil disalin!");
+        function cleanup() {
+            clearTimeout(timeout);
+            delete window[cbName];
+            const oldScript = document.getElementById("jsonp-script");
+            if (oldScript) oldScript.remove();
         }
 
-        function kirimWa() {
-            let noHp = document.getElementById("noHp").value.trim();
-            const pesan = encodeURIComponent(document.getElementById("resultWa").value);
-
-            if (!noHp) {
-                alert("Masukkan nomor WhatsApp klien!");
-                return;
+        window[cbName] = function(data) {
+            cleanup();
+            if (data && data.shorturl) {
+                document.getElementById("resultUrl").innerText = data.shorturl;
+                const nama = document.getElementById("namaKlien").value.trim() || "Budi & Ani";
+                updateWaText(data.shorturl, nama);
+                btn.innerText = "✅ Link Pendek Berhasil Dibuat!";
+            } else {
+                alert("Gagal memproses link pendek.");
+                btn.innerText = "🪄 Persingkat Link";
+                btn.disabled = false;
             }
-            if (noHp.startsWith("0")) noHp = "62" + noHp.slice(1);
-            window.open(`https://wa.me/${noHp}?text=${pesan}`, '_blank');
-        }
+        };
 
-        // Jalankan saat pertama dimuat
-        generateLink();
-    </script>
+        const script = document.createElement("script");
+        script.id = "jsonp-script";
+        script.src = `https://is.gd/create.php?format=json&callback=${cbName}&url=${encodeURIComponent(currentLongUrl)}`;
+        script.onerror = function() {
+            cleanup();
+            alert("Gagal terhubung ke server pemendek link.");
+            btn.innerText = "🪄 Persingkat Link";
+            btn.disabled = false;
+        };
+
+        document.body.appendChild(script);
+    }
+
+    function copyLink() {
+        const text = document.getElementById("waText").value;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Pesan dan link WhatsApp berhasil disalin ke clipboard!");
+        });
+    }
+
+    function sendWa() {
+        const noWa = document.getElementById("noWa").value.trim();
+        const text = encodeURIComponent(document.getElementById("waText").value);
+        let url = "";
+        
+        if (noWa) {
+            url = `https://wa.me/${noWa}?text=${text}`;
+        } else {
+            url = `https://wa.me/?text=${text}`;
+        }
+        
+        window.open(url, "_blank");
+    }
+
+    generateLink();
+</script>
+
 </body>
 </html>
