@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/shorten",
+      "destination": "https://tinyurl.com/api-create.php"
+    }
+  ]
+}
