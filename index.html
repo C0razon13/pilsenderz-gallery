@@ -32,7 +32,7 @@
 
         /* POP-UP MODAL ZOOM FULLSCREEN & OVERLAY */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); justify-content: center; align-items: center; flex-direction: column; touch-action: pan-y; }
-        .modal-content { max-width: 90%; max-height: 72vh; border-radius: 8px; box-shadow: 0 0 25px rgba(0,0,0,0.9); object-fit: contain; user-select: none; -webkit-user-drag: none; }
+        .modal-content { max-width: 90%; max-height: 72vh; border-radius: 8px; box-shadow: 0 0 25px rgba(0,0,0,0.9); object-fit: contain; user-select: none; -webkit-user-drag: none; transition: transform 0.25s ease-out, opacity 0.25s ease-out;}
         .tutup-modal { position: absolute; top: 15px; right: 25px; color: #ffffff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10001; user-select: none; }
         .tutup-modal:hover { color: #ff5252; }
 
@@ -211,6 +211,11 @@
         function bukaZoom(namaFile) {
             indexFotoAktif = arrayDaftarFoto.indexOf(namaFile);
             if (indexFotoAktif === -1) indexFotoAktif = 0;
+            const imgElement = document.getElementById("imgZoomed");
+            if (imgElement) {
+            imgElement.style.transform = "translateX(0)";
+            imgElement.style.opacity = "1";
+        }
             tampilkanFotoZoom();
             document.getElementById("modalZoom").style.display = "flex";
         }
@@ -221,12 +226,33 @@
 
         // FUNGSI GESER DENGAN BATASAN AWAL & AKHIR (TANPA LOOPING)
         function geserZoom(arah) {
-            const indexBaru = indexFotoAktif + arah;
-            if (indexBaru >= 0 && indexBaru < arrayDaftarFoto.length) {
-                indexFotoAktif = indexBaru;
-                tampilkanFotoZoom();
-            }
-        }
+    const indexBaru = indexFotoAktif + arah;
+    if (indexBaru >= 0 && indexBaru < arrayDaftarFoto.length) {
+        const imgElement = document.getElementById("imgZoomed");
+        if (!imgElement) return;
+
+        // 1. Efek Keluar (Slide Out ke kiri jika arah=1, ke kanan jika arah=-1)
+        imgElement.style.transform = arah === 1 ? "translateX(-60px)" : "translateX(60px)";
+        imgElement.style.opacity = "0";
+
+        // 2. Tunggu 150ms sampai efek keluar selesai, lalu ganti gambar
+        setTimeout(() => {
+            indexFotoAktif = indexBaru;
+            tampilkanFotoZoom();
+
+            // 3. Pindahkan gambar baru ke posisi masuk dari arah sebaliknya secara instan
+            imgElement.style.transition = "none";
+            imgElement.style.transform = arah === 1 ? "translateX(60px)" : "translateX(-60px)";
+
+            // 4. Jalankan efek masuk (Slide In) ke posisi tengah (0)
+            setTimeout(() => {
+                imgElement.style.transition = "transform 0.25s ease-out, opacity 0.25s ease-out";
+                imgElement.style.transform = "translateX(0)";
+                imgElement.style.opacity = "1";
+            }, 20);
+        }, 150);
+    }
+}
 
         function tampilkanFotoZoom() {
             const namaFile = arrayDaftarFoto[indexFotoAktif];
