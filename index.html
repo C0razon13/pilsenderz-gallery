@@ -13,7 +13,7 @@
 
         .galeri { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; padding: 10px; max-width: 1200px; margin: auto; }
         
-        .foto-kartu { position: relative; cursor: pointer; border: 4px solid transparent; border-radius: 8px; overflow: hidden; transition: 0.2s; background-color: #2a2a2a; min-width: 200px; min-height: 250px; }
+        .foto-kartu { position: relative; cursor: pointer; border: 4px solid transparent; border-radius: 8px; overflow: hidden; transition: 0.2s; background-color: #2a2a2a; min-width: 160px; min-height: 220px; }
         .foto-kartu img { height: 250px; width: 100%; object-fit: cover; transition: transform 0.3s ease; display: block; }
         .foto-kartu:hover img { transform: scale(1.05); }
         
@@ -25,29 +25,40 @@
         .btn-zoom { position: absolute; bottom: 10px; right: 10px; background: rgba(0, 0, 0, 0.75); color: #fff; border: 1px solid rgba(255,255,255,0.5); padding: 5px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; z-index: 5; transition: 0.2s; font-weight: bold; }
         .btn-zoom:hover { background: #2196F3; border-color: #2196F3; color: white; }
 
-        .tombol-kirim { position: fixed; bottom: 30px; right: 30px; padding: 15px 25px; background: #4CAF50; color: white; border: none; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: 0.3s; z-index: 10; }
-        .tombol-kirim:hover { background: #45a049; transform: translateY(-3px); }
+        .tombol-kirim { position: fixed; bottom: 25px; right: 25px; padding: 14px 22px; background: #4CAF50; color: white; border: none; border-radius: 50px; font-size: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: 0.3s; z-index: 10; }
+        .tombol-kirim:hover { background: #45a049; transform: translateY(-2px); }
         .tombol-kirim:disabled { background: #666666; cursor: not-allowed; }
         .error-img { padding: 40px 10px; color: #ff6b6b; font-size: 12px; }
 
-        /* Pop-up Modal Zoom Fullscreen & Overlay (PERBAIKAN LENGKAP) */
-        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.93); justify-content: center; align-items: center; flex-direction: column; }
-        .modal-content { max-width: 88%; max-height: 78vh; border-radius: 8px; box-shadow: 0 0 25px rgba(0,0,0,0.9); object-fit: contain; }
-        .tutup-modal { position: absolute; top: 20px; right: 30px; color: #ffffff; font-size: 45px; font-weight: bold; cursor: pointer; z-index: 10000; user-select: none; }
+        /* POP-UP MODAL ZOOM FULLSCREEN & OVERLAY (RESPONSIF MOBILE) */
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); justify-content: center; align-items: center; flex-direction: column; touch-action: pan-y; }
+        .modal-content { max-width: 90%; max-height: 72vh; border-radius: 8px; box-shadow: 0 0 25px rgba(0,0,0,0.9); object-fit: contain; user-select: none; -webkit-user-drag: none; }
+        .tutup-modal { position: absolute; top: 15px; right: 25px; color: #ffffff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10001; user-select: none; }
         .tutup-modal:hover { color: #ff5252; }
 
-        /* Tombol Navigasi Slider Zoom (❮ ❯) */
-        .nav-btn { cursor: pointer; position: absolute; top: 50%; width: auto; padding: 18px 22px; margin-top: -30px; color: white; font-weight: bold; font-size: 32px; transition: 0.2s ease; border-radius: 6px; user-select: none; background-color: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.2); z-index: 10000; }
-        .nav-next { right: 20px; }
-        .nav-prev { left: 20px; }
-        .nav-btn:hover { background-color: rgba(255, 255, 255, 0.2); border-color: #fff; }
+        /* Tombol Navigasi Slider Zoom (❮ ❯) Minimalis & Transparan */
+        .nav-btn { cursor: pointer; position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 50px; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; background-color: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; z-index: 10000; user-select: none; transition: 0.2s ease; }
+        .nav-next { right: 12px; }
+        .nav-prev { left: 12px; }
+        .nav-btn:active { background-color: rgba(255, 255, 255, 0.3); }
 
-        /* Kontainer Tombol Pilih / Batal di Modal Zoom */
-        .zoom-action-container { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 10000; background: rgba(30, 30, 30, 0.85); padding: 8px 18px; border-radius: 30px; border: 1px solid #444; }
-        .btn-zoom-pilih { background-color: #4CAF50; color: white; border: none; padding: 10px 24px; text-align: center; font-size: 15px; cursor: pointer; border-radius: 20px; font-weight: bold; transition: 0.2s; }
-        .btn-zoom-pilih:hover { background-color: #45a049; }
+        /* Kontainer Tombol Pilih / Batal di Modal Zoom (Proporsional HP) */
+        .zoom-action-container { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 10000; background: rgba(20, 20, 20, 0.85); padding: 6px 14px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); }
+        .btn-zoom-pilih { background-color: #4CAF50; color: white; border: none; padding: 10px 22px; text-align: center; font-size: 14px; cursor: pointer; border-radius: 20px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
+        .btn-zoom-pilih:active { transform: scale(0.96); }
         .btn-zoom-batal { background-color: #f44336; }
-        .btn-zoom-batal:hover { background-color: #d32f2f; }
+
+        /* Penyesuaian Ukuran Khusus Layar HP / Mobile */
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .modal-content { max-width: 94%; max-height: 68vh; }
+            .nav-btn { width: 34px; height: 44px; font-size: 18px; background-color: rgba(0, 0, 0, 0.25); border: none; }
+            .nav-next { right: 6px; }
+            .nav-prev { left: 6px; }
+            .zoom-action-container { bottom: 20px; }
+            .btn-zoom-pilih { padding: 9px 18px; font-size: 13px; }
+            .tombol-kirim { bottom: 18px; right: 18px; padding: 12px 20px; font-size: 14px; }
+        }
     </style>
 </head>
 <body>
@@ -237,6 +248,29 @@
                 : `🚀 Kirim Pilihan (${fotoTerpilih.size})`;
                 
             tampilkanFotoZoom(); 
+        }
+
+        // DUKUNGAN SWIPE / GESER LAYAR SENTUH PADA MODAL ZOOM
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const modalZoomEl = document.getElementById("modalZoom");
+
+        modalZoomEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        modalZoomEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const minSwipeDistance = 40; // Batas minimal jarak usap (piksel)
+            if (touchEndX < touchStartX - minSwipeDistance) {
+                geserZoom(1);  // Usap ke Kiri -> Foto Berikutnya
+            } else if (touchEndX > touchStartX + minSwipeDistance) {
+                geserZoom(-1); // Usap ke Kanan -> Foto Sebelumnya
+            }
         }
 
         muatPilihanSebelumnya();
