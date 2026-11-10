@@ -30,28 +30,32 @@
         .tombol-kirim:disabled { background: #666666; cursor: not-allowed; }
         .error-img { padding: 40px 10px; color: #ff6b6b; font-size: 12px; }
 
-        /* POP-UP MODAL ZOOM FULLSCREEN & OVERLAY (RESPONSIF MOBILE) */
+        /* POP-UP MODAL ZOOM FULLSCREEN & OVERLAY */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); justify-content: center; align-items: center; flex-direction: column; touch-action: pan-y; }
         .modal-content { max-width: 90%; max-height: 72vh; border-radius: 8px; box-shadow: 0 0 25px rgba(0,0,0,0.9); object-fit: contain; user-select: none; -webkit-user-drag: none; }
         .tutup-modal { position: absolute; top: 15px; right: 25px; color: #ffffff; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10001; user-select: none; }
         .tutup-modal:hover { color: #ff5252; }
 
-        /* Tombol Navigasi Slider Zoom (❮ ❯) Minimalis & Transparan */
+        /* Indikator Nomor & Nama Foto Zoom */
+        .zoom-info-text { position: absolute; top: 20px; left: 25px; color: #ffffff; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.6); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.15); z-index: 10001; }
+
+        /* Tombol Navigasi Slider Zoom (❮ ❯) */
         .nav-btn { cursor: pointer; position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 50px; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; background-color: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; z-index: 10000; user-select: none; transition: 0.2s ease; }
         .nav-next { right: 12px; }
         .nav-prev { left: 12px; }
         .nav-btn:active { background-color: rgba(255, 255, 255, 0.3); }
+        .nav-btn:disabled { opacity: 0.15; cursor: not-allowed; pointer-events: none; border-color: transparent; }
 
-        /* Kontainer Tombol Pilih / Batal di Modal Zoom (Proporsional HP) */
+        /* Kontainer Tombol Pilih / Batal di Modal Zoom */
         .zoom-action-container { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 10000; background: rgba(20, 20, 20, 0.85); padding: 6px 14px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); }
         .btn-zoom-pilih { background-color: #4CAF50; color: white; border: none; padding: 10px 22px; text-align: center; font-size: 14px; cursor: pointer; border-radius: 20px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
         .btn-zoom-pilih:active { transform: scale(0.96); }
         .btn-zoom-batal { background-color: #f44336; }
 
-        /* Penyesuaian Ukuran Khusus Layar HP / Mobile */
         @media (max-width: 600px) {
             body { padding: 12px; }
             .modal-content { max-width: 94%; max-height: 68vh; }
+            .zoom-info-text { top: 18px; left: 18px; font-size: 11px; padding: 4px 10px; }
             .nav-btn { width: 34px; height: 44px; font-size: 18px; background-color: rgba(0, 0, 0, 0.25); border: none; }
             .nav-next { right: 6px; }
             .nav-prev { left: 6px; }
@@ -75,11 +79,15 @@
     <!-- Modal Zoom Fullscreen Slider -->
     <div id="modalZoom" class="modal" onclick="if(event.target === this) tutupZoom()">
         <span class="tutup-modal" onclick="tutupZoom()">×</span>
+        
+        <!-- Indikator Angka & Nama Foto -->
+        <div id="zoomInfo" class="zoom-info-text">1 / 1</div>
+        
         <img id="imgZoomed" class="modal-content">
         
         <!-- Tombol Navigasi Kiri/Kanan -->
-        <button class="nav-btn nav-prev" onclick="geserZoom(-1); event.stopPropagation();">❮</button>
-        <button class="nav-btn nav-next" onclick="geserZoom(1); event.stopPropagation();">❯</button>
+        <button id="btnPrevZoom" class="nav-btn nav-prev" onclick="geserZoom(-1); event.stopPropagation();">❮</button>
+        <button id="btnNextZoom" class="nav-btn nav-next" onclick="geserZoom(1); event.stopPropagation();">❯</button>
         
         <!-- Area Tombol Pilih/Batal Pilih -->
         <div id="zoom-action-area" class="zoom-action-container"></div>
@@ -211,11 +219,13 @@
             document.getElementById("modalZoom").style.display = "none";
         }
 
+        // FUNGSI GESER DENGAN BATASAN AWAL & AKHIR (TANPA LOOPING)
         function geserZoom(arah) {
-            indexFotoAktif += arah;
-            if (indexFotoAktif >= arrayDaftarFoto.length) indexFotoAktif = 0;
-            else if (indexFotoAktif < 0) indexFotoAktif = arrayDaftarFoto.length - 1;
-            tampilkanFotoZoom();
+            const indexBaru = indexFotoAktif + arah;
+            if (indexBaru >= 0 && indexBaru < arrayDaftarFoto.length) {
+                indexFotoAktif = indexBaru;
+                tampilkanFotoZoom();
+            }
         }
 
         function tampilkanFotoZoom() {
@@ -223,6 +233,19 @@
             const imgElement = document.getElementById("imgZoomed");
             imgElement.src = `photos/${folderName}/${namaFile}`;
             
+            // 1. Tampilkan Indikator Angka & Nama Foto (misal: 3 / 15)
+            const zoomInfo = document.getElementById("zoomInfo");
+            if (zoomInfo) {
+                zoomInfo.innerText = `${indexFotoAktif + 1} / ${arrayDaftarFoto.length} • ${namaFile}`;
+            }
+
+            // 2. Kontrol Tombol Navigasi (Matikan panah jika sudah di ujung foto)
+            const btnPrev = document.getElementById("btnPrevZoom");
+            const btnNext = document.getElementById("btnNextZoom");
+            if (btnPrev) btnPrev.disabled = (indexFotoAktif === 0);
+            if (btnNext) btnNext.disabled = (indexFotoAktif === arrayDaftarFoto.length - 1);
+
+            // 3. Update Tombol Pilih/Batal
             const actionArea = document.getElementById("zoom-action-area");
             if (fotoTerpilih.has(namaFile)) {
                 actionArea.innerHTML = `<button class="btn-zoom-pilih btn-zoom-batal" onclick="togglePilihDariZoom('${namaFile}'); event.stopPropagation();">❌ Batal Pilih</button>`;
@@ -250,6 +273,20 @@
             tampilkanFotoZoom(); 
         }
 
+        // DUKUNGAN NAVIGASI KEYBOARD PC (Panah Kiri ◄, Panah Kanan ►, Esc)
+        document.addEventListener('keydown', e => {
+            const modalZoom = document.getElementById("modalZoom");
+            if (modalZoom && modalZoom.style.display === "flex") {
+                if (e.key === "ArrowLeft") {
+                    geserZoom(-1);
+                } else if (e.key === "ArrowRight") {
+                    geserZoom(1);
+                } else if (e.key === "Escape") {
+                    tutupZoom();
+                }
+            }
+        });
+
         // DUKUNGAN SWIPE / GESER LAYAR SENTUH PADA MODAL ZOOM
         let touchStartX = 0;
         let touchEndX = 0;
@@ -265,11 +302,11 @@
         }, { passive: true });
 
         function handleSwipe() {
-            const minSwipeDistance = 40; // Batas minimal jarak usap (piksel)
+            const minSwipeDistance = 40;
             if (touchEndX < touchStartX - minSwipeDistance) {
-                geserZoom(1);  // Usap ke Kiri -> Foto Berikutnya
+                geserZoom(1);  // Swipe Kiri -> Foto Berikutnya
             } else if (touchEndX > touchStartX + minSwipeDistance) {
-                geserZoom(-1); // Usap ke Kanan -> Foto Sebelumnya
+                geserZoom(-1); // Swipe Kanan -> Foto Sebelumnya
             }
         }
 
