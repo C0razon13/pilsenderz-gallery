@@ -91,7 +91,20 @@
         
         <!-- Area Tombol Pilih/Batal Pilih -->
         <div id="zoom-action-area" class="zoom-action-container"></div>
+        </div>
+
+        <!-- POP-UP RATING GOOGLE REVIEW PASCA KIRIM FOTO -->
+<div id="modalRating" class="modal" style="display:none; z-index:10003;">
+    <div style="background:#1e1e1e; padding:30px 25px; border-radius:12px; border:1px solid #4CAF50; max-width:380px; text-align:center; box-shadow:0 0 30px rgba(0,0,0,0.8);">
+        <h2 style="color:#4CAF50; margin-bottom:10px; font-size:20px;">✅ Pilihan Berhasil Terkirim!</h2>
+        <p style="font-size:14px; color:#e0e0e0; margin-bottom:15px; line-height:1.4;">Terima kasih sudah memilih foto bersama <b>erazphoto</b>.</p>
+        <p style="font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.4;">Dukungan Kakak sangat berarti! Bantu kami berkembang dengan memberikan ulasan bintang 5 & pengalaman Kakak di Google Review ⭐⭐⭐⭐⭐</p>
+        
+        <a id="btnLinkGoogle" href="https://g.page/r/CQNHPNI_JajZEBM/review" target="_blank" style="display:block; background:#4285F4; color:#fff; text-decoration:none; padding:12px 20px; border-radius:25px; font-weight:bold; font-size:14px; margin-bottom:12px; transition:0.2s;">⭐ Beri Ulasan di Google</a>
+        
+        <button onclick="document.getElementById('modalRating').style.display='none';" style="background:transparent; color:#888; border:none; cursor:pointer; font-size:12px; text-decoration:underline; padding:5px;">Tutup Galeri</button>
     </div>
+</div>
 
     <script>
         const debugBox = document.getElementById("debug-log");
@@ -102,6 +115,8 @@
         const fotoParam = urlParams.get('foto');
         const daftarFoto = fotoParam ? fotoParam.split(',') : ["1.jpg", "2.jpg", "3.jpg"];
         const folderName = urlParams.get('folder') || 'default';
+        const limitParam = urlParams.get('limit');
+        const MAX_LIMIT = limitParam ? parseInt(limitParam) : null;
 
         document.getElementById("judul-galeri").innerText = `Galeri Foto - ${NAMA_KLIEN}`;
 
@@ -166,15 +181,20 @@
                 }
                 
                 kartu.onclick = (e) => {
-                    if (e.target.classList.contains('btn-zoom')) return;
+                if (e.target.classList.contains('btn-zoom')) return;
 
-                    if (fotoTerpilih.has(namaTrimmed)) {
-                        fotoTerpilih.delete(namaTrimmed);
-                        kartu.classList.remove("terpilih");
-                    } else {
-                        fotoTerpilih.add(namaTrimmed);
-                        kartu.classList.add("terpilih");
-                    }
+                if (fotoTerpilih.has(namaTrimmed)) {
+                fotoTerpilih.delete(namaTrimmed);
+                kartu.classList.remove("terpilih");
+            } else {
+                // PENGECEKAN BATAS MAKSIMAL
+                if (MAX_LIMIT && fotoTerpilih.size >= MAX_LIMIT) {
+                    alert(`⚠️ Batas Maksimum Tercapai!\n\nPaket foto Anda dibatasi maksimal ${MAX_LIMIT} foto pilihan.`);
+                    return;
+                }
+                fotoTerpilih.add(namaTrimmed);
+                kartu.classList.add("terpilih");
+            }
                     
                     teksJumlah.innerText = fotoTerpilih.size;
                     document.getElementById("btn-kirim").innerText = existingRowId 
@@ -281,23 +301,28 @@
         }
 
         function togglePilihDariZoom(namaFile) {
-            if (fotoTerpilih.has(namaFile)) {
-                fotoTerpilih.delete(namaFile);
-                const kartu = document.getElementById(`kartu-${namaFile}`);
-                if (kartu) kartu.classList.remove("terpilih");
-            } else {
-                fotoTerpilih.add(namaFile);
-                const kartu = document.getElementById(`kartu-${namaFile}`);
-                if (kartu) kartu.classList.add("terpilih");
-            }
-            
-            teksJumlah.innerText = fotoTerpilih.size;
-            document.getElementById("btn-kirim").innerText = existingRowId 
-                ? `🚀 Perbarui Pilihan (${fotoTerpilih.size})` 
-                : `🚀 Kirim Pilihan (${fotoTerpilih.size})`;
-                
-            tampilkanFotoZoom(); 
+    if (fotoTerpilih.has(namaFile)) {
+        fotoTerpilih.delete(namaFile);
+        const kartu = document.getElementById(`kartu-${namaFile}`);
+        if (kartu) kartu.classList.remove("terpilih");
+    } else {
+        // PENGECEKAN BATAS MAKSIMAL FOTO
+        if (MAX_LIMIT && fotoTerpilih.size >= MAX_LIMIT) {
+            alert(`⚠️ Batas Maksimum Tercapai!\n\nPaket foto Anda dibatasi maksimal ${MAX_LIMIT} foto pilihan.`);
+            return;
         }
+        fotoTerpilih.add(namaFile);
+        const kartu = document.getElementById(`kartu-${namaFile}`);
+        if (kartu) kartu.classList.add("terpilih");
+    }
+    
+    teksJumlah.innerText = fotoTerpilih.size;
+    document.getElementById("btn-kirim").innerText = existingRowId 
+        ? `🚀 Perbarui Pilihan (${fotoTerpilih.size})` 
+        : `🚀 Kirim Pilihan (${fotoTerpilih.size})`;
+        
+    tampilkanFotoZoom(); 
+}
 
         // DUKUNGAN NAVIGASI KEYBOARD PC (Panah Kiri ◄, Panah Kanan ►, Esc)
         document.addEventListener('keydown', e => {
@@ -377,9 +402,11 @@
 
                 if (response.ok) {
                     log(`✅ SUKSES: Pilihan ${NAMA_KLIEN} berhasil disimpan di Cloud!`);
-                    alert(`✅ TERKIRIM KE ERAZPHOTO!\n\nData ${fotoTerpilih.size} foto pilihan ${NAMA_KLIEN} berhasil disimpan.`);
                     btnKirim.disabled = false;
                     btnKirim.innerText = `✓ Perbarui Pilihan (${fotoTerpilih.size})`;
+    
+                // TAMPILKAN POP-UP RATING GOOGLE REVIEW
+                    document.getElementById("modalRating").style.display = "flex";
                 } else {
                     const errText = await response.text();
                     log(`❌ Gagal Mengirim (${response.status}): ${errText}`);

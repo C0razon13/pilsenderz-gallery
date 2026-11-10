@@ -68,6 +68,16 @@
     </div>
 
     <div class="form-group">
+        <label>Batas Maksimal Foto Pilihan (Opsional)</label>
+        <input type="number" id="limitFoto" placeholder="Contoh: 50 (Kosongkan jika bebas)" oninput="generateLink()">
+    </div>
+
+    <div class="form-group">
+        <label>PIN Keamanan Galeri (Opsional - 4 Digit)</label>
+        <input type="text" id="pinGaleri" maxlength="4" placeholder="Contoh: 1234" oninput="generateLink()">
+    </div>
+
+    <div class="form-group">
         <label>🔗 Preview Link Galeri Web:</label>
         <div id="resultUrl" class="preview-box">Link akan muncul di sini setelah Anda memasukkan nama & memilih foto...</div>
         <button id="btn-shorten" class="btn btn-purple" onclick="shortenLink()">🪄 Persingkat Link (TinyURL)</button>
@@ -104,14 +114,18 @@
         // Ambil nilai nama folder
         const folder = document.getElementById("namaFolder").value.trim() || "default";
         const base = document.getElementById("baseUrl").value.trim() || "https://erazphoto.vercel.app/index.html";
-        
+        const limit = document.getElementById("limitFoto").value.trim();
+        const limitQuery = limit ? `&limit=${encodeURIComponent(limit)}` : '';
+        const pin = document.getElementById("pinGaleri").value.trim();
+        const pinQuery = pin ? `&pin=${encodeURIComponent(pin)}` : '';
+
         if (detectedPhotoNames.length === 0) {
             // Sisipkan parameter folder ke dalam URL
-            currentLongUrl = `${base}?folder=${encodeURIComponent(folder)}&klien=${encodeURIComponent(nama)}&foto=DSCF7223.jpg,DSCF7224.jpg,DSCF7226.jpg`;
+            currentLongUrl = `${base}?folder=${encodeURIComponent(folder)}&klien=${encodeURIComponent(nama)}${pinQuery}${limitQuery}&foto=DSCF7223.jpg,DSCF7224.jpg,DSCF7226.jpg`;
         } else {
             const fotoStr = detectedPhotoNames.join(",");
             // Sisipkan parameter folder ke dalam URL
-            currentLongUrl = `${base}?folder=${encodeURIComponent(folder)}&klien=${encodeURIComponent(nama)}&foto=${encodeURIComponent(fotoStr)}`;
+            currentLongUrl = `${base}?folder=${encodeURIComponent(folder)}&klien=${encodeURIComponent(nama)}${pinQuery}${limitQuery}&foto=${encodeURIComponent(fotoStr)}`;
         }
 
         document.getElementById("resultUrl").innerText = currentLongUrl;
@@ -123,7 +137,7 @@
     }
 
     function updateWaText(url, nama) {
-        const text = `Halo Kak ${nama},\n\nBerikut adalah link galeri untuk pemilihan foto karya *erazphoto*:\n👉 ${url}\n\nSilakan buka link di atas, pilih foto-foto favorit Kakak, lalu tekan tombol *Perbarui Pilihan* di bagian bawah galeri jika sudah selesai.\n\nTerima kasih! 🙏`;
+        const text = `Halo Kak ${nama},\n\nBerikut adalah link galeri untuk pemilihan foto karya *erazphoto*:\n👉 ${url}\n\nSilakan buka link di atas, pilih foto-foto favorit Kakak, lalu tekan tombol *Kirim Pilihan* / *Perbarui Pilihan* jika ada revisi pilihan di bagian bawah galeri jika sudah selesai.\n\nTerima kasih! 🙏`;
         document.getElementById("waText").value = text;
     }
 
