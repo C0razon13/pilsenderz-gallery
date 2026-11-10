@@ -48,11 +48,20 @@
 
     <button class="tombol-kirim" id="btn-kirim" onclick="kirimKeCloud()">🚀 Kirim Pilihan (<span id="jumlah">0</span>)</button>
 
-    <!-- Modal Pop-up Zoom -->
-    <div id="modalZoom" class="modal-zoom" onclick="tutupZoom()">
-        <span class="close-zoom" onclick="tutupZoom()">&times;</span>
-        <img id="imgZoomed" src="" alt="Zoom Foto" onclick="event.stopPropagation()">
+    <!-- UPDATE: HTML Modal Zoom Baru dengan Tombol Navigasi dan Pilih -->
+    <div id="modalZoom" class="modal" onclick="if(event.target === this) tutupZoom()">
+    <span class="tutup-modal" onclick="tutupZoom()">×</span>
+    <img id="imgZoomed" class="modal-content">
+    
+    <!-- Tombol Navigasi Kiri/Kanan -->
+    <button class="nav-btn nav-prev" onclick="geserZoom(-1); event.stopPropagation();">❮</button>
+    <button class="nav-btn nav-next" onclick="geserZoom(1); event.stopPropagation();">❯</button>
+    
+    <!-- Area Tombol Pilih/Batal Pilih di Modal Zoom -->
+    <div id="zoom-action-area" class="zoom-action-container">
+        <!-- Konten tombol akan di-generate via JavaScript -->
     </div>
+</div>
 
     <script>
         const debugBox = document.getElementById("debug-log");
@@ -111,12 +120,14 @@
         }
 
         function renderFotoLokal() {
+            arrayDaftarFoto = daftarFoto;
             tempatGaleri.innerHTML = "";
             
             daftarFoto.forEach(namaFile => {
                 const namaTrimmed = namaFile.trim();
                 const kartu = document.createElement("div");
                 kartu.className = "foto-kartu";
+                kartu.id = `kartu-${namaTrimmed}`;
                 
                 if (fotoTerpilih.has(namaTrimmed)) {
                     kartu.classList.add("terpilih");
@@ -164,14 +175,53 @@
             });
         }
 
-        function bukaZoom(src) {
-            document.getElementById("imgZoomed").src = `photos/${folderName}/${src}`;
-            document.getElementById("modalZoom").style.display = "flex";
-        }
+        // VARIABEL GLOBAL BARU UNTUK SLIDER ZOOM
+    let indexFotoAktif = 0;
+    let arrayDaftarFoto = [];
 
-        function tutupZoom() {
-            document.getElementById("modalZoom").style.display = "none";
+    // FUNGSI ZOOM BARU
+    function bukaZoom(namaFile) {
+        indexFotoAktif = arrayDaftarFoto.indexOf(namaFile);
+        if (indexFotoAktif === -1) indexFotoAktif = 0;
+        tampilkanFotoZoom();
+        document.getElementById("modalZoom").style.display = "flex";
+    }
+
+    function tutupZoom() {
+        document.getElementById("modalZoom").style.display = "none";
+    }
+
+    function geserZoom(arah) {
+        indexFotoAktif += arah;
+        if (indexFotoAktif >= arrayDaftarFoto.length) indexFotoAktif = 0;
+        else if (indexFotoAktif < 0) indexFotoAktif = arrayDaftarFoto.length - 1;
+        tampilkanFotoZoom();
+    }
+
+    function tampilkanFotoZoom() {
+        const namaFile = arrayDaftarFoto[indexFotoAktif];
+        const imgElement = document.getElementById("imgZoomed");
+        imgElement.src = `photos/${folderName}/${namaFile}`;
+        
+        const actionArea = document.getElementById("zoom-action-area");
+        if (fotoTerpilih.has(namaFile)) {
+            actionArea.innerHTML = `<button class="btn-zoom-pilih btn-zoom-batal" onclick="togglePilihDariZoom('${namaFile}'); event.stopPropagation();">❌ Batal Pilih</button>`;
+        } else {
+            actionArea.innerHTML = `<button class="btn-zoom-pilih" onclick="togglePilihDariZoom('${namaFile}'); event.stopPropagation();">✅ Pilih Foto Ini</button>`;
         }
+    }
+
+    function togglePilihDariZoom(namaFile) {
+        if (fotoTerpilih.has(namaFile)) {
+            fotoTerpilih.delete(namaFile);
+            document.getElementById(`kartu-${namaFile}`).classList.remove("terpilih");
+        } else {
+            fotoTerpilih.add(namaFile);
+            document.getElementById(`kartu-${namaFile}`).classList.add("terpilih");
+        }
+        document.getElementById("btn-kirim").innerText = `Kirim Pilihan (${fotoTerpilih.size})`;
+        tampilkanFotoZoom(); 
+    }
 
         muatPilihanSebelumnya();
 
