@@ -21,7 +21,7 @@
         .ceklis { display: none; position: absolute; top: 10px; right: 10px; background: #4CAF50; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 2; }
         .terpilih .ceklis { display: block; }
 
-        /* Tombol Zoom */
+        /* Tombol Zoom di Kartu Foto */
         .btn-zoom { position: absolute; bottom: 10px; right: 10px; background: rgba(0, 0, 0, 0.75); color: #fff; border: 1px solid rgba(255,255,255,0.5); padding: 5px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; z-index: 5; transition: 0.2s; font-weight: bold; }
         .btn-zoom:hover { background: #2196F3; border-color: #2196F3; color: white; }
 
@@ -30,11 +30,24 @@
         .tombol-kirim:disabled { background: #666666; cursor: not-allowed; }
         .error-img { padding: 40px 10px; color: #ff6b6b; font-size: 12px; }
 
-        /* Pop-up Modal Zoom Fullscreen */
-        .modal-zoom { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.92); justify-content: center; align-items: center; }
-        .modal-zoom img { max-width: 90%; max-height: 90vh; border-radius: 8px; box-shadow: 0 0 25px rgba(0,0,0,0.8); object-fit: contain; }
-        .close-zoom { position: absolute; top: 20px; right: 30px; color: #ffffff; font-size: 45px; font-weight: bold; cursor: pointer; z-index: 1000; user-select: none; }
-        .close-zoom:hover { color: #ff5252; }
+        /* Pop-up Modal Zoom Fullscreen & Overlay (PERBAIKAN LENGKAP) */
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.93); justify-content: center; align-items: center; flex-direction: column; }
+        .modal-content { max-width: 88%; max-height: 78vh; border-radius: 8px; box-shadow: 0 0 25px rgba(0,0,0,0.9); object-fit: contain; }
+        .tutup-modal { position: absolute; top: 20px; right: 30px; color: #ffffff; font-size: 45px; font-weight: bold; cursor: pointer; z-index: 10000; user-select: none; }
+        .tutup-modal:hover { color: #ff5252; }
+
+        /* Tombol Navigasi Slider Zoom (❮ ❯) */
+        .nav-btn { cursor: pointer; position: absolute; top: 50%; width: auto; padding: 18px 22px; margin-top: -30px; color: white; font-weight: bold; font-size: 32px; transition: 0.2s ease; border-radius: 6px; user-select: none; background-color: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.2); z-index: 10000; }
+        .nav-next { right: 20px; }
+        .nav-prev { left: 20px; }
+        .nav-btn:hover { background-color: rgba(255, 255, 255, 0.2); border-color: #fff; }
+
+        /* Kontainer Tombol Pilih / Batal di Modal Zoom */
+        .zoom-action-container { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 10000; background: rgba(30, 30, 30, 0.85); padding: 8px 18px; border-radius: 30px; border: 1px solid #444; }
+        .btn-zoom-pilih { background-color: #4CAF50; color: white; border: none; padding: 10px 24px; text-align: center; font-size: 15px; cursor: pointer; border-radius: 20px; font-weight: bold; transition: 0.2s; }
+        .btn-zoom-pilih:hover { background-color: #45a049; }
+        .btn-zoom-batal { background-color: #f44336; }
+        .btn-zoom-batal:hover { background-color: #d32f2f; }
     </style>
 </head>
 <body>
@@ -48,20 +61,18 @@
 
     <button class="tombol-kirim" id="btn-kirim" onclick="kirimKeCloud()">🚀 Kirim Pilihan (<span id="jumlah">0</span>)</button>
 
-    <!-- UPDATE: HTML Modal Zoom Baru dengan Tombol Navigasi dan Pilih -->
+    <!-- Modal Zoom Fullscreen Slider -->
     <div id="modalZoom" class="modal" onclick="if(event.target === this) tutupZoom()">
-    <span class="tutup-modal" onclick="tutupZoom()">×</span>
-    <img id="imgZoomed" class="modal-content">
-    
-    <!-- Tombol Navigasi Kiri/Kanan -->
-    <button class="nav-btn nav-prev" onclick="geserZoom(-1); event.stopPropagation();">❮</button>
-    <button class="nav-btn nav-next" onclick="geserZoom(1); event.stopPropagation();">❯</button>
-    
-    <!-- Area Tombol Pilih/Batal Pilih di Modal Zoom -->
-    <div id="zoom-action-area" class="zoom-action-container">
-        <!-- Konten tombol akan di-generate via JavaScript -->
+        <span class="tutup-modal" onclick="tutupZoom()">×</span>
+        <img id="imgZoomed" class="modal-content">
+        
+        <!-- Tombol Navigasi Kiri/Kanan -->
+        <button class="nav-btn nav-prev" onclick="geserZoom(-1); event.stopPropagation();">❮</button>
+        <button class="nav-btn nav-next" onclick="geserZoom(1); event.stopPropagation();">❯</button>
+        
+        <!-- Area Tombol Pilih/Batal Pilih -->
+        <div id="zoom-action-area" class="zoom-action-container"></div>
     </div>
-</div>
 
     <script>
         const debugBox = document.getElementById("debug-log");
@@ -83,6 +94,8 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzeWVycHNidXB6amZmdm1ieGx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxNjE3NTcsImV4cCI6MjEwOTczNzc1N30.OsxDy-O6t5Nl-g0n_PjebG4mRrlQ78EEkoqoKJ4taKI";
 
         let existingRowId = null;
+        let indexFotoAktif = 0;
+        let arrayDaftarFoto = [];
 
         async function muatPilihanSebelumnya() {
             log(`Memeriksa riwayat pilihan untuk <b>${NAMA_KLIEN}</b>...`);
@@ -175,53 +188,56 @@
             });
         }
 
-        // VARIABEL GLOBAL BARU UNTUK SLIDER ZOOM
-    let indexFotoAktif = 0;
-    let arrayDaftarFoto = [];
-
-    // FUNGSI ZOOM BARU
-    function bukaZoom(namaFile) {
-        indexFotoAktif = arrayDaftarFoto.indexOf(namaFile);
-        if (indexFotoAktif === -1) indexFotoAktif = 0;
-        tampilkanFotoZoom();
-        document.getElementById("modalZoom").style.display = "flex";
-    }
-
-    function tutupZoom() {
-        document.getElementById("modalZoom").style.display = "none";
-    }
-
-    function geserZoom(arah) {
-        indexFotoAktif += arah;
-        if (indexFotoAktif >= arrayDaftarFoto.length) indexFotoAktif = 0;
-        else if (indexFotoAktif < 0) indexFotoAktif = arrayDaftarFoto.length - 1;
-        tampilkanFotoZoom();
-    }
-
-    function tampilkanFotoZoom() {
-        const namaFile = arrayDaftarFoto[indexFotoAktif];
-        const imgElement = document.getElementById("imgZoomed");
-        imgElement.src = `photos/${folderName}/${namaFile}`;
-        
-        const actionArea = document.getElementById("zoom-action-area");
-        if (fotoTerpilih.has(namaFile)) {
-            actionArea.innerHTML = `<button class="btn-zoom-pilih btn-zoom-batal" onclick="togglePilihDariZoom('${namaFile}'); event.stopPropagation();">❌ Batal Pilih</button>`;
-        } else {
-            actionArea.innerHTML = `<button class="btn-zoom-pilih" onclick="togglePilihDariZoom('${namaFile}'); event.stopPropagation();">✅ Pilih Foto Ini</button>`;
+        // FUNGSI SLIDER & ACTION MODAL ZOOM
+        function bukaZoom(namaFile) {
+            indexFotoAktif = arrayDaftarFoto.indexOf(namaFile);
+            if (indexFotoAktif === -1) indexFotoAktif = 0;
+            tampilkanFotoZoom();
+            document.getElementById("modalZoom").style.display = "flex";
         }
-    }
 
-    function togglePilihDariZoom(namaFile) {
-        if (fotoTerpilih.has(namaFile)) {
-            fotoTerpilih.delete(namaFile);
-            document.getElementById(`kartu-${namaFile}`).classList.remove("terpilih");
-        } else {
-            fotoTerpilih.add(namaFile);
-            document.getElementById(`kartu-${namaFile}`).classList.add("terpilih");
+        function tutupZoom() {
+            document.getElementById("modalZoom").style.display = "none";
         }
-        document.getElementById("btn-kirim").innerText = `Kirim Pilihan (${fotoTerpilih.size})`;
-        tampilkanFotoZoom(); 
-    }
+
+        function geserZoom(arah) {
+            indexFotoAktif += arah;
+            if (indexFotoAktif >= arrayDaftarFoto.length) indexFotoAktif = 0;
+            else if (indexFotoAktif < 0) indexFotoAktif = arrayDaftarFoto.length - 1;
+            tampilkanFotoZoom();
+        }
+
+        function tampilkanFotoZoom() {
+            const namaFile = arrayDaftarFoto[indexFotoAktif];
+            const imgElement = document.getElementById("imgZoomed");
+            imgElement.src = `photos/${folderName}/${namaFile}`;
+            
+            const actionArea = document.getElementById("zoom-action-area");
+            if (fotoTerpilih.has(namaFile)) {
+                actionArea.innerHTML = `<button class="btn-zoom-pilih btn-zoom-batal" onclick="togglePilihDariZoom('${namaFile}'); event.stopPropagation();">❌ Batal Pilih</button>`;
+            } else {
+                actionArea.innerHTML = `<button class="btn-zoom-pilih" onclick="togglePilihDariZoom('${namaFile}'); event.stopPropagation();">✅ Pilih Foto Ini</button>`;
+            }
+        }
+
+        function togglePilihDariZoom(namaFile) {
+            if (fotoTerpilih.has(namaFile)) {
+                fotoTerpilih.delete(namaFile);
+                const kartu = document.getElementById(`kartu-${namaFile}`);
+                if (kartu) kartu.classList.remove("terpilih");
+            } else {
+                fotoTerpilih.add(namaFile);
+                const kartu = document.getElementById(`kartu-${namaFile}`);
+                if (kartu) kartu.classList.add("terpilih");
+            }
+            
+            teksJumlah.innerText = fotoTerpilih.size;
+            document.getElementById("btn-kirim").innerText = existingRowId 
+                ? `🚀 Perbarui Pilihan (${fotoTerpilih.size})` 
+                : `🚀 Kirim Pilihan (${fotoTerpilih.size})`;
+                
+            tampilkanFotoZoom(); 
+        }
 
         muatPilihanSebelumnya();
 
